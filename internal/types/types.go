@@ -1,6 +1,12 @@
-package server
+package types
 
 type User struct {
+	Contact  int64  `json:"contact"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type AuthRequest struct {
 	Contact  int64  `json:"contact"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
