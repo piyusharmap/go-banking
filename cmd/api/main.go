@@ -15,13 +15,17 @@ func main() {
 		log.Fatal("error loding env file")
 	}
 
-	_, err := storage.NewPostgresStore()
+	store, err := storage.NewPostgresStore()
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	server := server.NewAPIServer(":8080")
+	if err := store.Init(); err != nil {
+		log.Fatal(err)
+	}
+
+	server := server.NewAPIServer(":8080", store)
 
 	server.Run()
 }

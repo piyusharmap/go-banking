@@ -32,19 +32,15 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/auth/register", makeHTTPHandleFunc(s.handleRegister))
 	router.HandleFunc("/auth/login", makeHTTPHandleFunc(s.handleLogin))
 
-	log.Println("server is running on port:", s.listenAddr)
+	log.Println("server is running on port:", s.ListenAddr)
 
-	http.ListenAndServe(s.listenAddr, router)
+	http.ListenAndServe(s.ListenAddr, router)
 }
 
 // auth routes
 
 func (s *APIServer) handleRegister(w http.ResponseWriter, r *http.Request) error {
 
-	// take user input for contact, email and password
-	// encrypt the password and store in the database
-	// create a jwt token based on email and contact and store in database
-	// send back user details and jwt token in response
 	requestMethod := r.Method
 
 	if requestMethod != "POST" {
@@ -67,26 +63,34 @@ func (s *APIServer) handleRegister(w http.ResponseWriter, r *http.Request) error
 		return err
 	}
 
-	fmt.Println(string(encrypted_password))
+	user := &types.User{
+		Contact:  registerRequest.Contact,
+		Email:    registerRequest.Email,
+		Password: string(encrypted_password),
+	}
 
-	token, err := middleware.CreateJWT(&registerRequest)
+	token, err := middleware.CreateJWT(user)
 
 	if err != nil {
 		return err
 	}
 
-	fmt.Println(token)
+	storedUser, err := s.Store.RegisterUser(user)
 
-	WriteJSON(w, http.StatusOK, registerRequest)
+	if err != nil {
+		return err
+	}
+
+	WriteJSON(w, http.StatusOK, map[string]any{
+		"contact": storedUser.Contact,
+		"email":   storedUser.Email,
+		"token":   token,
+	})
 
 	return nil
 }
 
 func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
-
-	// take user input for email/contact, password and jwt
-	// will validate the jwt token and password
-	// send back user details and jwt in reponse
 
 	requestMethod := r.Method
 
@@ -102,11 +106,33 @@ func (s *APIServer) handleLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	// if err := bcrypt.CompareHashAndPassword([]byte(encrypted_pass), []byte(loginRequest.Password)); err != nil {
-	// 	return err
-	// }
+	user := &types.User{
+		Contact:  loginRequest.Contact,
+		Email:    loginRequest.Email,
+		Password: loginRequest.Password,
+	}
 
-	WriteJSON(w, http.StatusOK, loginRequest)
+	storedUser, err := s.Store.GetUser(user)
+
+	if err != nil {
+		return err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(loginRequest.Password)); err != nil {
+		return err
+	}
+
+	token, err := middleware.CreateJWT(user)
+
+	if err != nil {
+		return err
+	}
+
+	WriteJSON(w, http.StatusOK, map[string]any{
+		"contact": storedUser.Contact,
+		"email":   storedUser.Email,
+		"token":   token,
+	})
 
 	return nil
 }

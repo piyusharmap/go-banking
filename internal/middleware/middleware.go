@@ -16,10 +16,10 @@ type CustomJWTClaims struct {
 
 const signingKey = "secret69"
 
-func CreateJWT(request *types.AuthRequest) (string, error) {
+func CreateJWT(user *types.User) (string, error) {
 	claims := CustomJWTClaims{
-		request.Contact,
-		request.Email,
+		user.Contact,
+		user.Email,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),

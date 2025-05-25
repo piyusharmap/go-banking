@@ -3,10 +3,13 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+
+	"github.com/piyusharmap/go-banking/internal/storage"
 )
 
 type APIServer struct {
-	listenAddr string
+	ListenAddr string
+	Store      storage.Storage
 }
 
 type APIFunc func(w http.ResponseWriter, r *http.Request) error
@@ -15,9 +18,10 @@ type APIError struct {
 	Error string `json:"error"`
 }
 
-func NewAPIServer(listenAddr string) *APIServer {
+func NewAPIServer(listenAddr string, store *storage.PostgresStore) *APIServer {
 	return &APIServer{
-		listenAddr: listenAddr,
+		ListenAddr: listenAddr,
+		Store:      store,
 	}
 }
 

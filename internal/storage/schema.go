@@ -3,7 +3,7 @@ package storage
 import "database/sql"
 
 func CreateUserTable(db *sql.DB) error {
-	query := `CREATE TABLE IF NOT EXISTS USER (
+	query := `CREATE TABLE IF NOT EXISTS USERS (
 		id SERIAL PRIMARY KEY,
 		contact BIGINT,
 		email VARCHAR(60),
