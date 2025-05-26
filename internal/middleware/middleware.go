@@ -14,8 +14,6 @@ type CustomJWTClaims struct {
 	jwt.RegisteredClaims
 }
 
-const signingKey = "secret69"
-
 func CreateJWT(user *types.User) (string, error) {
 	claims := CustomJWTClaims{
 		user.Contact,
