@@ -11,6 +11,7 @@ import (
 type Storage interface {
 	RegisterUser(*types.User) (*types.StoredUser, error)
 	GetUser(*types.User) (*types.StoredUser, error)
+	GetUserByID(int) (*types.StoredUser, error)
 	UpdateUser(int, *types.User) (*types.StoredUser, error)
 }
 
@@ -83,6 +84,29 @@ func (s *PostgresStore) GetUser(user *types.User) (*types.StoredUser, error) {
 		&storedUser.Contact,
 		&storedUser.Email,
 		&storedUser.Password,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return storedUser, nil
+}
+
+func (s *PostgresStore) GetUserByID(id int) (*types.StoredUser, error) {
+	query := `SELECT usr_id, contact, email
+	FROM users
+	WHERE usr_id=$1`
+
+	storedUser := &types.StoredUser{}
+
+	err := s.db.QueryRow(
+		query,
+		id,
+	).Scan(
+		&storedUser.Id,
+		&storedUser.Contact,
+		&storedUser.Email,
 	)
 
 	if err != nil {
