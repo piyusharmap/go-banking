@@ -9,13 +9,16 @@ import (
 )
 
 type CustomJWTClaims struct {
-	Contact int64  `json:"contact"`
+	ID      int    `json:"id"`
+	Contact string `json:"contact"`
 	Email   string `json:"email"`
 	jwt.RegisteredClaims
 }
 
-func CreateJWT(user *types.User) (string, error) {
+// to create jwt token based on id, contact and email
+func CreateJWT(user *types.UserResponse) (string, error) {
 	claims := CustomJWTClaims{
+		user.ID,
 		user.Contact,
 		user.Email,
 		jwt.RegisteredClaims{
@@ -30,7 +33,8 @@ func CreateJWT(user *types.User) (string, error) {
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-func VerifyJWT(tokenString string) (*jwt.Token, error) {
+// to validate the token provided by user based on custom claims
+func ValidateJWT(tokenString string) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(tokenString, &CustomJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil
 	}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))

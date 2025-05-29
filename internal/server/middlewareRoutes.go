@@ -12,7 +12,7 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
 
-		token, err := middleware.VerifyJWT(tokenString)
+		token, err := middleware.ValidateJWT(tokenString)
 
 		if err != nil {
 			ThrowPermissionDenied(w)
@@ -36,7 +36,7 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(*middleware.CustomJWTClaims); ok {
-			if claims.Contact != user.Contact && claims.Email != user.Email {
+			if claims.Contact != user.Contact || claims.Email != user.Email {
 				ThrowPermissionDenied(w)
 				return
 			}

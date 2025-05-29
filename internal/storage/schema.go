@@ -4,12 +4,12 @@ import "database/sql"
 
 func CreateUserTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS users (
-		usr_id SERIAL PRIMARY KEY,
-		contact BIGINT,
-		email VARCHAR(60),
-		password VARCHAR(60),
-		created_at TIMESTAMP,
-		updated_at TIMESTAMP
+		id SERIAL PRIMARY KEY,
+		contact VARCHAR(15) UNIQUE NOT NULL,
+		email VARCHAR(120) UNIQUE NOT NULL,
+		password_hash TEXT NOT NULL,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`
 
 	_, err := db.Exec(query)
@@ -19,15 +19,12 @@ func CreateUserTable(db *sql.DB) error {
 
 func CreateAccountTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS account (
-		acc_id SERIAL PRIMARY KEY,
-		first_name VARCHAR(50),
-		last_name VARCHAR(50),
-		account_number VARCHAR(20),
-		balance BIGINT,
-		created_at TIMESTAMP,
-		updated_at TIMESTAMP,
-		CONSTRAINT fk_users FOREIGN KEY (usr_id)
-		REFERENCES users(usr_id)
+		id SERIAL PRIMARY KEY,
+		user_id INT NOT NULL REFERENCES users(id),
+		account_number VARCHAR(20) UNIQUE NOT NULL,
+		balance NUMERIC(12, 2) DEFAULT 0.00 NOT NULL,
+		currency VARCHAR(3) DEFAULT 'INR',
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`
 
 	_, err := db.Exec(query)

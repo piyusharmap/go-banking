@@ -27,6 +27,5 @@ func (s *APIServer) HandleGetAccount(w http.ResponseWriter, r *http.Request) err
 }
 
 func (s *APIServer) HandleAccountByID(w http.ResponseWriter, r *http.Request) error {
-	WriteJSON(w, http.StatusOK, "middleware working")
 	return nil
 }

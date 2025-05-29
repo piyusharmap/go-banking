@@ -22,14 +22,10 @@ func makeHTTPHandleFunc(f APIFunc) http.HandlerFunc {
 func (s *APIServer) Run() {
 	router := mux.NewRouter()
 
-	// auth routes
-	router.HandleFunc("/auth/register", makeHTTPHandleFunc(s.HandleRegister))
-	router.HandleFunc("/auth/login", makeHTTPHandleFunc(s.HandleLogin))
+	// user routes
+	router.HandleFunc("/user/register", makeHTTPHandleFunc(s.HandleRegister))
+	router.HandleFunc("/user/login", makeHTTPHandleFunc(s.HandleLogin))
 	router.HandleFunc("/user/{id}", withJWTAuth(makeHTTPHandleFunc(s.HandleUserUpdate), s))
-
-	// account routes
-	router.HandleFunc("/account", makeHTTPHandleFunc(s.HandleAccount))
-	router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.HandleAccountByID), s))
 
 	log.Println("server is running on port:", s.ListenAddr)
 

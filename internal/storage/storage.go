@@ -9,10 +9,10 @@ import (
 )
 
 type Storage interface {
-	RegisterUser(*types.User) (*types.StoredUser, error)
-	GetUser(*types.User) (*types.StoredUser, error)
-	GetUserByID(int) (*types.StoredUser, error)
-	UpdateUser(int, *types.User) (*types.StoredUser, error)
+	RegisterUser(*types.User) (*types.UserResponse, error)
+	GetUser(*types.User) (*types.UserModel, error)
+	GetUserByID(int) (*types.UserResponse, error)
+	UpdateUser(int, *types.User) (*types.UserResponse, error)
 }
 
 type PostgresStore struct {
@@ -41,12 +41,12 @@ func NewPostgresStore() (*PostgresStore, error) {
 	}, nil
 }
 
-func (s *PostgresStore) RegisterUser(user *types.User) (*types.StoredUser, error) {
-	query := `INSERT INTO users (contact, email, password, created_at, updated_at)
+func (s *PostgresStore) RegisterUser(user *types.User) (*types.UserResponse, error) {
+	query := `INSERT INTO users (contact, email, password_hash, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5)
-	RETURNING usr_id, contact, email`
+	RETURNING id, contact, email`
 
-	storedUser := &types.StoredUser{}
+	response := &types.UserResponse{}
 
 	err := s.db.QueryRow(
 		query,
@@ -56,31 +56,31 @@ func (s *PostgresStore) RegisterUser(user *types.User) (*types.StoredUser, error
 		time.Now().UTC(),
 		time.Now().UTC(),
 	).Scan(
-		&storedUser.Id,
-		&storedUser.Contact,
-		&storedUser.Email,
+		&response.ID,
+		&response.Contact,
+		&response.Email,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return storedUser, nil
+	return response, nil
 }
 
-func (s *PostgresStore) GetUser(user *types.User) (*types.StoredUser, error) {
-	query := `SELECT usr_id, contact, email, password
+func (s *PostgresStore) GetUser(user *types.User) (*types.UserModel, error) {
+	query := `SELECT id, contact, email, password_hash
 	FROM users
 	WHERE contact=$1 AND email=$2`
 
-	storedUser := &types.StoredUser{}
+	storedUser := &types.UserModel{}
 
 	err := s.db.QueryRow(
 		query,
 		user.Contact,
 		user.Email,
 	).Scan(
-		&storedUser.Id,
+		&storedUser.ID,
 		&storedUser.Contact,
 		&storedUser.Email,
 		&storedUser.Password,
@@ -93,36 +93,36 @@ func (s *PostgresStore) GetUser(user *types.User) (*types.StoredUser, error) {
 	return storedUser, nil
 }
 
-func (s *PostgresStore) GetUserByID(id int) (*types.StoredUser, error) {
-	query := `SELECT usr_id, contact, email
+func (s *PostgresStore) GetUserByID(id int) (*types.UserResponse, error) {
+	query := `SELECT id, contact, email
 	FROM users
-	WHERE usr_id=$1`
+	WHERE id=$1`
 
-	storedUser := &types.StoredUser{}
+	response := &types.UserResponse{}
 
 	err := s.db.QueryRow(
 		query,
 		id,
 	).Scan(
-		&storedUser.Id,
-		&storedUser.Contact,
-		&storedUser.Email,
+		&response.ID,
+		&response.Contact,
+		&response.Email,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return storedUser, nil
+	return response, nil
 }
 
-func (s *PostgresStore) UpdateUser(id int, user *types.User) (*types.StoredUser, error) {
+func (s *PostgresStore) UpdateUser(id int, user *types.User) (*types.UserResponse, error) {
 	query := `UPDATE users
 	SET contact=$1, email=$2, updated_at=$3
-	WHERE usr_id=$4
-	RETURNING usr_id, contact, email`
+	WHERE id=$4
+	RETURNING id, contact, email`
 
-	storedUser := &types.StoredUser{}
+	response := &types.UserResponse{}
 
 	err := s.db.QueryRow(
 		query,
@@ -131,14 +131,14 @@ func (s *PostgresStore) UpdateUser(id int, user *types.User) (*types.StoredUser,
 		time.Now().UTC(),
 		id,
 	).Scan(
-		&storedUser.Id,
-		&storedUser.Contact,
-		&storedUser.Email,
+		&response.ID,
+		&response.Contact,
+		&response.Email,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return storedUser, nil
+	return response, nil
 }

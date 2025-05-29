@@ -19,43 +19,50 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("invalid request method:%v", requestMethod)
 	}
 
-	registerRequest := types.AuthRequest{}
+	request := types.User{}
 
-	err := json.NewDecoder(r.Body).Decode(&registerRequest)
+	err := json.NewDecoder(r.Body).Decode(&request)
 
 	if err != nil {
 		return err
 	}
 
+	// closing body to prevent resourse leak
 	defer r.Body.Close()
 
-	encrypted_password, err := bcrypt.GenerateFromPassword([]byte(registerRequest.Password), bcrypt.DefaultCost)
+	password_hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 
 	if err != nil {
 		return err
 	}
 
 	user := &types.User{
-		Contact:  registerRequest.Contact,
-		Email:    registerRequest.Email,
-		Password: string(encrypted_password),
+		Contact:  request.Contact,
+		Email:    request.Email,
+		Password: string(password_hash),
 	}
 
-	token, err := middleware.CreateJWT(user)
+	newUser, err := s.Store.RegisterUser(user)
 
 	if err != nil {
 		return err
 	}
 
-	storedUser, err := s.Store.RegisterUser(user)
+	response := &types.UserResponse{
+		ID:      newUser.ID,
+		Contact: newUser.Contact,
+		Email:   newUser.Email,
+	}
+
+	token, err := middleware.CreateJWT(response)
 
 	if err != nil {
 		return err
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
-		"message": "registration successful",
-		"user":    storedUser,
+		"message": "user registered",
+		"user":    response,
 		"token":   token,
 	})
 }
@@ -67,9 +74,9 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("invalid request method:%v", requestMethod)
 	}
 
-	loginRequest := types.AuthRequest{}
+	request := types.User{}
 
-	err := json.NewDecoder(r.Body).Decode(&loginRequest)
+	err := json.NewDecoder(r.Body).Decode(&request)
 
 	if err != nil {
 		return err
@@ -78,9 +85,9 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 	defer r.Body.Close()
 
 	user := &types.User{
-		Contact:  loginRequest.Contact,
-		Email:    loginRequest.Email,
-		Password: loginRequest.Password,
+		Contact:  request.Contact,
+		Email:    request.Email,
+		Password: request.Password,
 	}
 
 	storedUser, err := s.Store.GetUser(user)
@@ -89,21 +96,25 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return err
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(loginRequest.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password)); err != nil {
 		return err
 	}
 
-	token, err := middleware.CreateJWT(user)
+	response := &types.UserResponse{
+		ID:      storedUser.ID,
+		Contact: storedUser.Contact,
+		Email:   storedUser.Email,
+	}
+
+	token, err := middleware.CreateJWT(response)
 
 	if err != nil {
 		return err
 	}
 
-	storedUser.Password = ""
-
 	return WriteJSON(w, http.StatusOK, map[string]any{
-		"message": "logged in",
-		"email":   storedUser,
+		"message": "user logged in",
+		"user":    response,
 		"token":   token,
 	})
 }
@@ -123,34 +134,34 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	updateRequest := &types.UpdateUserRequest{}
+	request := &types.UpdateUserRequest{}
 
-	if err := json.NewDecoder(r.Body).Decode(updateRequest); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return err
 	}
 
 	defer r.Body.Close()
 
 	user := &types.User{
-		Contact: updateRequest.Contact,
-		Email:   updateRequest.Email,
+		Contact: request.Contact,
+		Email:   request.Email,
 	}
 
-	storedUser, err := s.Store.UpdateUser(id, user)
+	response, err := s.Store.UpdateUser(id, user)
 
 	if err != nil {
 		return err
 	}
 
-	token, err := middleware.CreateJWT(user)
+	token, err := middleware.CreateJWT(response)
 
 	if err != nil {
 		return err
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
-		"message": "update success",
-		"user":    storedUser,
+		"message": "user updated",
+		"user":    response,
 		"token":   token,
 	})
 }
