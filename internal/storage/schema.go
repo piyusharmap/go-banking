@@ -21,10 +21,13 @@ func CreateAccountTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS account (
 		id SERIAL PRIMARY KEY,
 		user_id INT NOT NULL REFERENCES users(id),
+		first_name VARCHAR(50) NOT NULL,
+		last_name VARCHAR(50),
 		account_number VARCHAR(20) UNIQUE NOT NULL,
-		balance NUMERIC(12, 2) DEFAULT 0.00 NOT NULL,
+		balance BIGINT DEFAULT 000 NOT NULL,
 		currency VARCHAR(3) DEFAULT 'INR',
-		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 	)`
 
 	_, err := db.Exec(query)

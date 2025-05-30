@@ -4,11 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/piyusharmap/go-banking/internal/middleware"
 	"github.com/piyusharmap/go-banking/internal/types"
+	"github.com/piyusharmap/go-banking/internal/utility"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -42,16 +41,10 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 		Password: string(password_hash),
 	}
 
-	newUser, err := s.Store.RegisterUser(user)
+	response, err := s.Store.RegisterUser(user)
 
 	if err != nil {
 		return err
-	}
-
-	response := &types.UserResponse{
-		ID:      newUser.ID,
-		Contact: newUser.Contact,
-		Email:   newUser.Email,
 	}
 
 	token, err := middleware.CreateJWT(response)
@@ -126,9 +119,7 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 		return fmt.Errorf("invalid request method:%v", requestMethod)
 	}
 
-	idStr := mux.Vars(r)["id"]
-
-	id, err := strconv.Atoi(idStr)
+	id, err := utility.GetRequestID(r)
 
 	if err != nil {
 		return err
@@ -142,7 +133,7 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 
 	defer r.Body.Close()
 
-	user := &types.User{
+	user := &types.UpdateUserRequest{
 		Contact: request.Contact,
 		Email:   request.Email,
 	}

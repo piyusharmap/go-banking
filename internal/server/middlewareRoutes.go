@@ -2,15 +2,18 @@ package server
 
 import (
 	"net/http"
-	"strconv"
 
-	"github.com/gorilla/mux"
 	"github.com/piyusharmap/go-banking/internal/middleware"
 )
 
 func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
+
+		if tokenString == "" {
+			ThrowPermissionDenied(w)
+			return
+		}
 
 		token, err := middleware.ValidateJWT(tokenString)
 
@@ -19,28 +22,21 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 			return
 		}
 
-		idStr := mux.Vars(r)["id"]
+		claims, ok := token.Claims.(*middleware.CustomJWTClaims)
 
-		id, err := strconv.Atoi(idStr)
+		if !ok {
+			ThrowPermissionDenied(w)
+			return
+		}
+
+		user, err := s.Store.GetUserByID(claims.ID)
 
 		if err != nil {
 			ThrowPermissionDenied(w)
 			return
 		}
 
-		user, err := s.Store.GetUserByID(id)
-
-		if err != nil {
-			ThrowPermissionDenied(w)
-			return
-		}
-
-		if claims, ok := token.Claims.(*middleware.CustomJWTClaims); ok {
-			if claims.Contact != user.Contact || claims.Email != user.Email {
-				ThrowPermissionDenied(w)
-				return
-			}
-		} else {
+		if claims.Contact != user.Contact || claims.Email != user.Email {
 			ThrowPermissionDenied(w)
 			return
 		}
