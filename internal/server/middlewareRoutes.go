@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/piyusharmap/go-banking/internal/middleware"
@@ -41,6 +42,8 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 			return
 		}
 
-		handlerFunc(w, r)
+		ctx := context.WithValue(r.Context(), "user_id", claims.ID)
+
+		handlerFunc(w, r.WithContext(ctx))
 	}
 }

@@ -5,8 +5,8 @@ import "time"
 type Account struct {
 	UserID    int    `json:"user_id"`
 	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Currency  string `json:"currency"`
+	LastName  string `json:"last_name,omitempty"`
+	Currency  string `json:"currency,omitempty"`
 }
 
 type UpdateAccountRequest struct {

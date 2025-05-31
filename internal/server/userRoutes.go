@@ -18,11 +18,9 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 		return fmt.Errorf("invalid request method:%v", requestMethod)
 	}
 
-	request := types.User{}
+	request := &types.User{}
 
-	err := json.NewDecoder(r.Body).Decode(&request)
-
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return err
 	}
 
@@ -67,11 +65,9 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return fmt.Errorf("invalid request method:%v", requestMethod)
 	}
 
-	request := types.User{}
+	request := &types.User{}
 
-	err := json.NewDecoder(r.Body).Decode(&request)
-
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return err
 	}
 

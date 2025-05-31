@@ -21,18 +21,22 @@ func (s *APIServer) HandleAccount(w http.ResponseWriter, r *http.Request) error 
 }
 
 func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) error {
-	request := types.Account{}
+	request := &types.Account{}
 
-	err := json.NewDecoder(r.Body).Decode(&request)
-
-	if err != nil {
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return err
 	}
 
 	defer r.Body.Close()
 
+	authID := r.Context().Value("user_id").(int)
+
+	if authID != request.UserID {
+		return fmt.Errorf("permission denied")
+	}
+
 	account := &types.Account{
-		UserID:    request.UserID,
+		UserID:    authID,
 		FirstName: request.FirstName,
 		LastName:  request.LastName,
 		Currency:  request.Currency,
@@ -70,7 +74,9 @@ func (s *APIServer) HandleGetAccount(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
-	response, err := s.Store.GetAccountByID(id)
+	authID := r.Context().Value("user_id").(int)
+
+	response, err := s.Store.GetAccountByID(id, authID)
 
 	if err != nil {
 		return err
@@ -88,19 +94,19 @@ func (s *APIServer) HandleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 		return err
 	}
 
-	request := types.Account{}
+	request := &types.UpdateAccountRequest{}
 
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return err
 	}
 
-	account := &types.UpdateAccountRequest{
-		FirstName: request.FirstName,
-		LastName:  request.LastName,
-		Currency:  request.Currency,
+	if request.FirstName == "" || request.Currency == "" {
+		return fmt.Errorf("first_name and currency can't be empty")
 	}
 
-	response, err := s.Store.UpdateAccount(id, account)
+	authID := r.Context().Value("user_id").(int)
+
+	response, err := s.Store.UpdateAccount(id, authID, request)
 
 	if err != nil {
 		return err

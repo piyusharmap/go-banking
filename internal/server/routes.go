@@ -37,7 +37,7 @@ func (s *APIServer) Run() {
 }
 
 func ThrowPermissionDenied(w http.ResponseWriter) {
-	WriteJSON(w, http.StatusBadRequest, &APIError{
+	WriteJSON(w, http.StatusUnauthorized, &APIError{
 		Error: "permission denied",
 	})
 }
