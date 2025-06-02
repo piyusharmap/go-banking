@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/piyusharmap/go-banking/internal/middleware"
@@ -15,13 +14,13 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 	requestMethod := r.Method
 
 	if requestMethod != "POST" {
-		return fmt.Errorf("invalid request method:%v", requestMethod)
+		return ErrInvalidMethod()
 	}
 
 	request := &types.User{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
-		return err
+		return ErrInvalidRequest()
 	}
 
 	// closing body to prevent resourse leak
@@ -30,7 +29,7 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 	password_hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 
 	if err != nil {
-		return err
+		return ErrUnauthenticatedAccess()
 	}
 
 	user := &types.User{
@@ -42,13 +41,14 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 	response, err := s.Store.RegisterUser(user)
 
 	if err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	token, err := middleware.CreateJWT(response)
 
 	if err != nil {
-		return err
+		// if unable to created token, remove the created user from DB
+		return ErrInternalServer()
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
@@ -62,13 +62,13 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 	requestMethod := r.Method
 
 	if requestMethod != "POST" {
-		return fmt.Errorf("invalid request method:%v", requestMethod)
+		return ErrInvalidMethod()
 	}
 
 	request := &types.User{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
-		return err
+		return ErrInvalidRequest()
 	}
 
 	defer r.Body.Close()
@@ -82,11 +82,11 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 	storedUser, err := s.Store.GetUser(user)
 
 	if err != nil {
-		return err
+		return ErrUnauthenticatedAccess()
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password)); err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	response := &types.UserResponse{
@@ -98,7 +98,7 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 	token, err := middleware.CreateJWT(response)
 
 	if err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
@@ -112,22 +112,28 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 	requestMethod := r.Method
 
 	if requestMethod != "PUT" {
-		return fmt.Errorf("invalid request method:%v", requestMethod)
+		return ErrInvalidMethod()
 	}
 
 	id, err := utility.GetRequestID(r)
 
 	if err != nil {
-		return err
+		return ErrInvalidRequest()
 	}
 
 	request := &types.UpdateUserRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	defer r.Body.Close()
+
+	authID := r.Context().Value("user_id").(int)
+
+	if authID != id {
+		return ErrUnauthorizedAccess()
+	}
 
 	user := &types.UpdateUserRequest{
 		Contact: request.Contact,
@@ -137,13 +143,13 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 	response, err := s.Store.UpdateUser(id, user)
 
 	if err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	token, err := middleware.CreateJWT(response)
 
 	if err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{

@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/piyusharmap/go-banking/internal/types"
@@ -17,14 +16,14 @@ func (s *APIServer) HandleAccount(w http.ResponseWriter, r *http.Request) error 
 		return s.HandleCreateAccount(w, r)
 	}
 
-	return fmt.Errorf("invalid request method:%v", requestMethod)
+	return ErrInvalidMethod()
 }
 
 func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) error {
 	request := &types.Account{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
-		return err
+		return ErrInvalidRequest()
 	}
 
 	defer r.Body.Close()
@@ -32,7 +31,7 @@ func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	authID := r.Context().Value("user_id").(int)
 
 	if authID != request.UserID {
-		return fmt.Errorf("permission denied")
+		return ErrUnauthorizedAccess()
 	}
 
 	account := &types.Account{
@@ -45,7 +44,7 @@ func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	response, err := s.Store.RegisterAccount(account)
 
 	if err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
@@ -64,14 +63,14 @@ func (s *APIServer) HandleAccountByID(w http.ResponseWriter, r *http.Request) er
 		return s.HandleUpdateAccount(w, r)
 	}
 
-	return fmt.Errorf("invalid request method:%v", requestMethod)
+	return ErrInvalidMethod()
 }
 
 func (s *APIServer) HandleGetAccount(w http.ResponseWriter, r *http.Request) error {
 	id, err := utility.GetRequestID(r)
 
 	if err != nil {
-		return err
+		return ErrUnauthenticatedAccess()
 	}
 
 	authID := r.Context().Value("user_id").(int)
@@ -79,7 +78,7 @@ func (s *APIServer) HandleGetAccount(w http.ResponseWriter, r *http.Request) err
 	response, err := s.Store.GetAccountByID(id, authID)
 
 	if err != nil {
-		return err
+		return ErrUnauthorizedAccess()
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
@@ -91,17 +90,17 @@ func (s *APIServer) HandleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 	id, err := utility.GetRequestID(r)
 
 	if err != nil {
-		return err
+		return ErrUnauthenticatedAccess()
 	}
 
 	request := &types.UpdateAccountRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
-		return err
+		return ErrInvalidRequest()
 	}
 
 	if request.FirstName == "" || request.Currency == "" {
-		return fmt.Errorf("first_name and currency can't be empty")
+		return ErrInvalidRequest()
 	}
 
 	authID := r.Context().Value("user_id").(int)
@@ -109,7 +108,7 @@ func (s *APIServer) HandleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 	response, err := s.Store.UpdateAccount(id, authID, request)
 
 	if err != nil {
-		return err
+		return ErrInternalServer()
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{

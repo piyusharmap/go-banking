@@ -12,9 +12,15 @@ func makeHTTPHandleFunc(f APIFunc) http.HandlerFunc {
 		err := f(w, r)
 
 		if err != nil {
-			WriteJSON(w, http.StatusBadRequest, &APIError{
-				Error: err.Error(),
-			})
+			if apiError, ok := err.(*APIErrorResponse); ok {
+				WriteJSON(w, apiError.Status, &APIError{
+					Error: apiError.Message,
+				})
+			} else {
+				WriteJSON(w, http.StatusInternalServerError, &APIError{
+					Error: err.Error(),
+				})
+			}
 		}
 	}
 }
@@ -34,10 +40,4 @@ func (s *APIServer) Run() {
 	log.Println("server is running on port:", s.ListenAddr)
 
 	http.ListenAndServe(s.ListenAddr, router)
-}
-
-func ThrowPermissionDenied(w http.ResponseWriter) {
-	WriteJSON(w, http.StatusUnauthorized, &APIError{
-		Error: "permission denied",
-	})
 }
