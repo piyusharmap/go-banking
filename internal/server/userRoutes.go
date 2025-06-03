@@ -22,9 +22,11 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
 	}
-
-	// closing body to prevent resourse leak
 	defer r.Body.Close()
+
+	if request.Contact == "" || request.Email == "" || request.Password == "" {
+		return ErrInvalidRequest()
+	}
 
 	password_hash, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
 
@@ -47,11 +49,17 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 	token, err := middleware.CreateJWT(response)
 
 	if err != nil {
-		// if unable to created token, remove the created user from DB
+		// consider transactional rollback
+		_, err := s.Store.DeleteUser(response.ID)
+
+		if err != nil {
+			return ErrInternalServer()
+		}
+
 		return ErrInternalServer()
 	}
 
-	return WriteJSON(w, http.StatusOK, map[string]any{
+	return WriteJSON(w, http.StatusCreated, map[string]any{
 		"message": "user registered",
 		"user":    response,
 		"token":   token,
@@ -70,8 +78,11 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
 	}
-
 	defer r.Body.Close()
+
+	if request.Contact == "" || request.Email == "" || request.Password == "" {
+		return ErrInvalidRequest()
+	}
 
 	user := &types.User{
 		Contact:  request.Contact,
@@ -129,9 +140,9 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 
 	defer r.Body.Close()
 
-	authID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(int)
 
-	if authID != id {
+	if userID != id {
 		return ErrUnauthorizedAccess()
 	}
 

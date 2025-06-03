@@ -25,17 +25,20 @@ func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
 	}
-
 	defer r.Body.Close()
 
-	authID := r.Context().Value("user_id").(int)
+	if request.FirstName == "" || request.Currency == "" {
+		return ErrInvalidRequest()
+	}
 
-	if authID != request.UserID {
+	userID := r.Context().Value("user_id").(int)
+
+	if userID != request.UserID {
 		return ErrUnauthorizedAccess()
 	}
 
 	account := &types.Account{
-		UserID:    authID,
+		UserID:    userID,
 		FirstName: request.FirstName,
 		LastName:  request.LastName,
 		Currency:  request.Currency,
@@ -61,6 +64,8 @@ func (s *APIServer) HandleAccountByID(w http.ResponseWriter, r *http.Request) er
 		return s.HandleGetAccount(w, r)
 	case "PUT":
 		return s.HandleUpdateAccount(w, r)
+	case "DELETE":
+		return s.HandleRemoveAccount(w, r)
 	}
 
 	return ErrInvalidMethod()
@@ -73,9 +78,9 @@ func (s *APIServer) HandleGetAccount(w http.ResponseWriter, r *http.Request) err
 		return ErrUnauthenticatedAccess()
 	}
 
-	authID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(int)
 
-	response, err := s.Store.GetAccountByID(id, authID)
+	response, err := s.Store.GetAccountByID(id, userID)
 
 	if err != nil {
 		return ErrUnauthorizedAccess()
@@ -103,9 +108,9 @@ func (s *APIServer) HandleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 		return ErrInvalidRequest()
 	}
 
-	authID := r.Context().Value("user_id").(int)
+	userID := r.Context().Value("user_id").(int)
 
-	response, err := s.Store.UpdateAccount(id, authID, request)
+	response, err := s.Store.UpdateAccount(id, userID, request)
 
 	if err != nil {
 		return ErrInternalServer()
@@ -114,5 +119,26 @@ func (s *APIServer) HandleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 	return WriteJSON(w, http.StatusOK, map[string]any{
 		"message": "account updated",
 		"account": response,
+	})
+}
+
+func (s *APIServer) HandleRemoveAccount(w http.ResponseWriter, r *http.Request) error {
+	id, err := utility.GetRequestID(r)
+
+	if err != nil {
+		return ErrInvalidRequest()
+	}
+
+	userID := r.Context().Value("user_id").(int)
+
+	response, err := s.Store.RemoveAccount(id, userID)
+
+	if err != nil {
+		return ErrUnauthorizedAccess()
+	}
+
+	return WriteJSON(w, http.StatusOK, map[string]any{
+		"account": response,
+		"message": "account removed",
 	})
 }

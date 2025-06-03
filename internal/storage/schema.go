@@ -20,7 +20,7 @@ func CreateUserTable(db *sql.DB) error {
 func CreateAccountTable(db *sql.DB) error {
 	query := `CREATE TABLE IF NOT EXISTS account (
 		id SERIAL PRIMARY KEY,
-		user_id INT NOT NULL REFERENCES users(id),
+		user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
 		first_name VARCHAR(50) NOT NULL,
 		last_name VARCHAR(50),
 		account_number VARCHAR(20) UNIQUE NOT NULL,

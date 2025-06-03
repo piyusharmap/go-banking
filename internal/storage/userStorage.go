@@ -107,3 +107,26 @@ func (s *PostgresStore) UpdateUser(id int, user *types.UpdateUserRequest) (*type
 
 	return response, nil
 }
+
+func (s *PostgresStore) DeleteUser(id int) (*types.UserResponse, error) {
+	query := `DELETE FROM users
+	WHERE id=$1
+	RETURNING id, contact, email`
+
+	response := &types.UserResponse{}
+
+	err := s.db.QueryRow(
+		query,
+		id,
+	).Scan(
+		&response.ID,
+		&response.Contact,
+		&response.Email,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}

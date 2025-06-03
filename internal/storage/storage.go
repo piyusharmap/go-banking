@@ -13,11 +13,13 @@ type Storage interface {
 	GetUser(*types.User) (*types.UserModel, error)
 	GetUserByID(int) (*types.UserResponse, error)
 	UpdateUser(int, *types.UpdateUserRequest) (*types.UserResponse, error)
+	DeleteUser(int) (*types.UserResponse, error)
 
 	// account methods
 	RegisterAccount(*types.Account) (*types.AccountResponse, error)
 	GetAccountByID(int, int) (*types.AccountResponse, error)
 	UpdateAccount(int, int, *types.UpdateAccountRequest) (*types.AccountResponse, error)
+	RemoveAccount(int, int) (*types.AccountResponse, error)
 }
 
 type PostgresStore struct {
