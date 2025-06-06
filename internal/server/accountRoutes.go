@@ -12,11 +12,28 @@ func (s *APIServer) HandleAccount(w http.ResponseWriter, r *http.Request) error 
 	requestMethod := r.Method
 
 	switch requestMethod {
+	case "GET":
+		return s.HandleAccountByCustomerID(w, r)
 	case "POST":
 		return s.HandleCreateAccount(w, r)
 	}
 
 	return ErrInvalidMethod()
+}
+
+func (s *APIServer) HandleAccountByCustomerID(w http.ResponseWriter, r *http.Request) error {
+	customerID := r.Context().Value("customer_id").(int)
+
+	accountsResponse, err := s.Store.GetCustomerAccounts(customerID)
+
+	if err != nil {
+		return ErrInternalServer()
+	}
+
+	return WriteJSON(w, http.StatusOK, map[string]any{
+		"message":  "user accounts",
+		"accounts": accountsResponse,
+	})
 }
 
 func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) error {
@@ -31,14 +48,14 @@ func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) 
 		return ErrInvalidRequest()
 	}
 
-	CustomerID := r.Context().Value("customer_id").(int)
+	customerID := r.Context().Value("customer_id").(int)
 
-	if CustomerID != request.CustomerID {
+	if customerID != request.CustomerID {
 		return ErrUnauthorizedAccess()
 	}
 
 	account := &types.Account{
-		CustomerID: CustomerID,
+		CustomerID: customerID,
 		FirstName:  request.FirstName,
 		LastName:   request.LastName,
 	}

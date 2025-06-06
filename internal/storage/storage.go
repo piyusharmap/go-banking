@@ -16,6 +16,7 @@ type Storage interface {
 	DeleteCustomer(int) (*types.CustomerResponse, error)
 
 	// account methods
+	GetCustomerAccounts(int) ([]*types.AccountResponse, error)
 	RegisterAccount(*types.Account) (*types.AccountResponse, error)
 	GetAccountByID(int, int) (*types.AccountResponse, error)
 	UpdateAccount(int, int, *types.UpdateAccountRequest) (*types.AccountResponse, error)

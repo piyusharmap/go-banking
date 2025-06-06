@@ -1,3 +1,6 @@
-DROP TABLE account;
+DROP TABLE IF EXISTS TABLE account;
 
-DROP TABLE customer;
+DROP TABLE IF EXISTS TABLE customer;
+
+DROP TABLE IF EXISTS TABLE amount_transfer;
+

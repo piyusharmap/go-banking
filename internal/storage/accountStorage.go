@@ -7,6 +7,41 @@ import (
 	"github.com/piyusharmap/go-banking/internal/utility"
 )
 
+func (s *PostgresStore) GetCustomerAccounts(customerID int) ([]*types.AccountResponse, error) {
+	query := `SELECT id, customer_id, first_name, last_name, account_nummber
+	FROM account
+	WHERE customer_id=$1`
+
+	rows, err := s.db.Query(query, customerID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var responseAccounts []*types.AccountResponse
+
+	for rows.Next() {
+		var account types.AccountResponse
+
+		err := rows.Scan(
+			&account.ID,
+			&account.CustomerID,
+			&account.FirstName,
+			&account.LastName,
+			&account.AccountNumber,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		responseAccounts = append(responseAccounts, &account)
+	}
+
+	return responseAccounts, nil
+}
+
 func (s *PostgresStore) RegisterAccount(account *types.Account) (*types.AccountResponse, error) {
 	query := `INSERT INTO account (customer_id, first_name, last_name, account_number)
 	VALUES ($1, $2, $3, $4)
