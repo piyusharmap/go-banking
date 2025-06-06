@@ -17,7 +17,7 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 		return ErrInvalidMethod()
 	}
 
-	request := &types.User{}
+	request := &types.Customer{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
@@ -34,13 +34,13 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 		return ErrUnauthenticatedAccess()
 	}
 
-	user := &types.User{
+	customer := &types.Customer{
 		Contact:  request.Contact,
 		Email:    request.Email,
 		Password: string(password_hash),
 	}
 
-	response, err := s.Store.RegisterUser(user)
+	response, err := s.Store.RegisterCustomer(customer)
 
 	if err != nil {
 		return ErrInternalServer()
@@ -50,7 +50,7 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 
 	if err != nil {
 		// consider transactional rollback
-		_, err := s.Store.DeleteUser(response.ID)
+		_, err := s.Store.DeleteCustomer(response.ID)
 
 		if err != nil {
 			return ErrInternalServer()
@@ -60,9 +60,9 @@ func (s *APIServer) HandleRegister(w http.ResponseWriter, r *http.Request) error
 	}
 
 	return WriteJSON(w, http.StatusCreated, map[string]any{
-		"message": "user registered",
-		"user":    response,
-		"token":   token,
+		"message":  "customer registered",
+		"customer": response,
+		"token":    token,
 	})
 }
 
@@ -73,7 +73,7 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return ErrInvalidMethod()
 	}
 
-	request := &types.User{}
+	request := &types.Customer{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
@@ -84,26 +84,26 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 		return ErrInvalidRequest()
 	}
 
-	user := &types.User{
+	customer := &types.Customer{
 		Contact:  request.Contact,
 		Email:    request.Email,
 		Password: request.Password,
 	}
 
-	storedUser, err := s.Store.GetUser(user)
+	storedCustomer, err := s.Store.GetCustomer(customer)
 
 	if err != nil {
 		return ErrUnauthenticatedAccess()
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(storedUser.Password), []byte(user.Password)); err != nil {
+	if err := bcrypt.CompareHashAndPassword([]byte(storedCustomer.Password), []byte(customer.Password)); err != nil {
 		return ErrInternalServer()
 	}
 
-	response := &types.UserResponse{
-		ID:      storedUser.ID,
-		Contact: storedUser.Contact,
-		Email:   storedUser.Email,
+	response := &types.CustomerResponse{
+		ID:      storedCustomer.ID,
+		Contact: storedCustomer.Contact,
+		Email:   storedCustomer.Email,
 	}
 
 	token, err := middleware.CreateJWT(response)
@@ -113,13 +113,13 @@ func (s *APIServer) HandleLogin(w http.ResponseWriter, r *http.Request) error {
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
-		"message": "user logged in",
-		"user":    response,
-		"token":   token,
+		"message":  "customer logged in",
+		"customer": response,
+		"token":    token,
 	})
 }
 
-func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) HandleCustomerUpdate(w http.ResponseWriter, r *http.Request) error {
 	requestMethod := r.Method
 
 	if requestMethod != "PUT" {
@@ -132,26 +132,29 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 		return ErrInvalidRequest()
 	}
 
-	request := &types.UpdateUserRequest{}
+	request := &types.UpdateCustomerRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInternalServer()
 	}
-
 	defer r.Body.Close()
 
-	userID := r.Context().Value("user_id").(int)
+	if request.Contact == "" || request.Email == "" {
+		return ErrInvalidRequest()
+	}
 
-	if userID != id {
+	CustomerID := r.Context().Value("customer_id").(int)
+
+	if CustomerID != id {
 		return ErrUnauthorizedAccess()
 	}
 
-	user := &types.UpdateUserRequest{
+	customer := &types.UpdateCustomerRequest{
 		Contact: request.Contact,
 		Email:   request.Email,
 	}
 
-	response, err := s.Store.UpdateUser(id, user)
+	response, err := s.Store.UpdateCustomer(id, customer)
 
 	if err != nil {
 		return ErrInternalServer()
@@ -164,8 +167,8 @@ func (s *APIServer) HandleUserUpdate(w http.ResponseWriter, r *http.Request) err
 	}
 
 	return WriteJSON(w, http.StatusOK, map[string]any{
-		"message": "user updated",
-		"user":    response,
-		"token":   token,
+		"message":  "customer updated",
+		"customer": response,
+		"token":    token,
 	})
 }

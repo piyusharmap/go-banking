@@ -16,11 +16,11 @@ type CustomJWTClaims struct {
 }
 
 // to create jwt token based on id, contact and email
-func CreateJWT(user *types.UserResponse) (string, error) {
+func CreateJWT(customer *types.CustomerResponse) (string, error) {
 	claims := CustomJWTClaims{
-		user.ID,
-		user.Contact,
-		user.Email,
+		customer.ID,
+		customer.Contact,
+		customer.Email,
 		jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
@@ -33,7 +33,7 @@ func CreateJWT(user *types.UserResponse) (string, error) {
 	return token.SignedString([]byte(os.Getenv("JWT_SECRET")))
 }
 
-// to validate the token provided by user based on custom claims
+// to validate the token provided by customer based on custom claims
 func ValidateJWT(tokenString string) (*jwt.Token, error) {
 	return jwt.ParseWithClaims(tokenString, &CustomJWTClaims{}, func(token *jwt.Token) (interface{}, error) {
 		return []byte(os.Getenv("JWT_SECRET")), nil

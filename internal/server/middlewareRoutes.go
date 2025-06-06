@@ -11,7 +11,7 @@ import (
 // validate the tokeni, throw error if fails
 // extract the claims, throw error if fails
 // match claims with corresponding DB entry, throw error if fails
-// pass down the request with context (logged in user ID)
+// pass down the request with context (logged in customer ID)
 func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		tokenString := r.Header.Get("Authorization")
@@ -50,7 +50,7 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 			return
 		}
 
-		user, err := s.Store.GetUserByID(claims.ID)
+		customer, err := s.Store.GetCustomerByID(claims.ID)
 
 		if err != nil {
 			err := ErrUnauthenticatedAccess()
@@ -62,7 +62,7 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 			return
 		}
 
-		if claims.Contact != user.Contact || claims.Email != user.Email {
+		if claims.Contact != customer.Contact || claims.Email != customer.Email {
 			err := ErrUnauthenticatedAccess()
 
 			WriteJSON(w, err.Status, &APIError{
@@ -72,7 +72,7 @@ func withJWTAuth(handlerFunc http.HandlerFunc, s *APIServer) http.HandlerFunc {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), "user_id", claims.ID)
+		ctx := context.WithValue(r.Context(), "customer_id", claims.ID)
 
 		handlerFunc(w, r.WithContext(ctx))
 	}

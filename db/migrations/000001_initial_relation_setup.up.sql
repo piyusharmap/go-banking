@@ -1,6 +1,5 @@
 CREATE TABLE IF NOT EXISTS customer(
     id SERIAL PRIMARY KEY,
-    customer_id VARCHAR(20),
     contact VARCHAR(15) UNIQUE NOT NULL,
     email VARCHAR(120) UNIQUE NOT NULL,
     password_hash TEXT NOT NULL,

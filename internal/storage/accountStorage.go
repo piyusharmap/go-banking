@@ -8,9 +8,9 @@ import (
 )
 
 func (s *PostgresStore) RegisterAccount(account *types.Account) (*types.AccountResponse, error) {
-	query := `INSERT INTO account (user_id, first_name, last_name, account_number, currency)
-	VALUES ($1, $2, $3, $4, $5)
-	RETURNING id, user_id, first_name, last_name, account_number`
+	query := `INSERT INTO account (customer_id, first_name, last_name, account_number)
+	VALUES ($1, $2, $3, $4)
+	RETURNING id, customer_id, first_name, last_name, account_number`
 
 	response := &types.AccountResponse{}
 
@@ -18,14 +18,13 @@ func (s *PostgresStore) RegisterAccount(account *types.Account) (*types.AccountR
 
 	err := s.db.QueryRow(
 		query,
-		account.UserID,
+		account.CustomerID,
 		account.FirstName,
 		account.LastName,
 		accNum,
-		account.Currency,
 	).Scan(
 		&response.ID,
-		&response.UserID,
+		&response.CustomerID,
 		&response.FirstName,
 		&response.LastName,
 		&response.AccountNumber,
@@ -38,20 +37,20 @@ func (s *PostgresStore) RegisterAccount(account *types.Account) (*types.AccountR
 	return response, nil
 }
 
-func (s *PostgresStore) GetAccountByID(id, userID int) (*types.AccountResponse, error) {
-	query := `SELECT id, user_id, first_name, last_name, account_number
+func (s *PostgresStore) GetAccountByID(id, customerID int) (*types.AccountResponse, error) {
+	query := `SELECT id, customer_id, first_name, last_name, account_number
 	FROM account
-	WHERE id=$1 AND user_id=$2`
+	WHERE id=$1 AND customer_id=$2`
 
 	response := &types.AccountResponse{}
 
 	err := s.db.QueryRow(
 		query,
 		id,
-		userID,
+		customerID,
 	).Scan(
 		&response.ID,
-		&response.UserID,
+		&response.CustomerID,
 		&response.FirstName,
 		&response.LastName,
 		&response.AccountNumber,
@@ -64,11 +63,11 @@ func (s *PostgresStore) GetAccountByID(id, userID int) (*types.AccountResponse, 
 	return response, nil
 }
 
-func (s *PostgresStore) UpdateAccount(id, userID int, account *types.UpdateAccountRequest) (*types.AccountResponse, error) {
+func (s *PostgresStore) UpdateAccount(id, CustomerID int, account *types.UpdateAccountRequest) (*types.AccountResponse, error) {
 	query := `UPDATE account
-	SET first_name=$1, last_name=$2, currency=$3, updated_at=$4 
-	WHERE id=$5 AND user_id=$6
-	RETURNING id, user_id, first_name, last_name, account_number`
+	SET first_name=$1, last_name=$2, updated_at=$3
+	WHERE id=$4 AND customer_id=$5
+	RETURNING id, customer_id, first_name, last_name, account_number`
 
 	response := &types.AccountResponse{}
 
@@ -76,13 +75,12 @@ func (s *PostgresStore) UpdateAccount(id, userID int, account *types.UpdateAccou
 		query,
 		account.FirstName,
 		account.LastName,
-		account.Currency,
 		time.Now().UTC(),
 		id,
-		userID,
+		CustomerID,
 	).Scan(
 		&response.ID,
-		&response.UserID,
+		&response.CustomerID,
 		&response.FirstName,
 		&response.LastName,
 		&response.AccountNumber,
@@ -95,20 +93,20 @@ func (s *PostgresStore) UpdateAccount(id, userID int, account *types.UpdateAccou
 	return response, nil
 }
 
-func (s *PostgresStore) RemoveAccount(id, userID int) (*types.AccountResponse, error) {
+func (s *PostgresStore) RemoveAccount(id, CustomerID int) (*types.AccountResponse, error) {
 	query := `DELETE FROM account
-	WHERE id=$1 AND user_id=$2
-	RETURNING id, user_id, first_name, last_name, account_number`
+	WHERE id=$1 AND customer_id=$2
+	RETURNING id, customer_id, first_name, last_name, account_number`
 
 	response := &types.AccountResponse{}
 
 	err := s.db.QueryRow(
 		query,
 		id,
-		userID,
+		CustomerID,
 	).Scan(
 		&response.ID,
-		&response.UserID,
+		&response.CustomerID,
 		&response.FirstName,
 		&response.LastName,
 		&response.AccountNumber,

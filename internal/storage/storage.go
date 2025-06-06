@@ -8,12 +8,12 @@ import (
 )
 
 type Storage interface {
-	// user methods
-	RegisterUser(*types.User) (*types.UserResponse, error)
-	GetUser(*types.User) (*types.UserModel, error)
-	GetUserByID(int) (*types.UserResponse, error)
-	UpdateUser(int, *types.UpdateUserRequest) (*types.UserResponse, error)
-	DeleteUser(int) (*types.UserResponse, error)
+	// customer methods
+	RegisterCustomer(*types.Customer) (*types.CustomerResponse, error)
+	GetCustomer(*types.Customer) (*types.CustomerModel, error)
+	GetCustomerByID(int) (*types.CustomerResponse, error)
+	UpdateCustomer(int, *types.UpdateCustomerRequest) (*types.CustomerResponse, error)
+	DeleteCustomer(int) (*types.CustomerResponse, error)
 
 	// account methods
 	RegisterAccount(*types.Account) (*types.AccountResponse, error)

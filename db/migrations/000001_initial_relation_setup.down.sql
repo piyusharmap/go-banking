@@ -1,3 +1,3 @@
 DROP TABLE account;
 
-DROP TABLE users;
+DROP TABLE customer;

@@ -27,21 +27,20 @@ func (s *APIServer) HandleCreateAccount(w http.ResponseWriter, r *http.Request) 
 	}
 	defer r.Body.Close()
 
-	if request.FirstName == "" || request.Currency == "" {
+	if request.FirstName == "" {
 		return ErrInvalidRequest()
 	}
 
-	userID := r.Context().Value("user_id").(int)
+	CustomerID := r.Context().Value("customer_id").(int)
 
-	if userID != request.UserID {
+	if CustomerID != request.CustomerID {
 		return ErrUnauthorizedAccess()
 	}
 
 	account := &types.Account{
-		UserID:    userID,
-		FirstName: request.FirstName,
-		LastName:  request.LastName,
-		Currency:  request.Currency,
+		CustomerID: CustomerID,
+		FirstName:  request.FirstName,
+		LastName:   request.LastName,
 	}
 
 	response, err := s.Store.RegisterAccount(account)
@@ -78,9 +77,9 @@ func (s *APIServer) HandleGetAccount(w http.ResponseWriter, r *http.Request) err
 		return ErrUnauthenticatedAccess()
 	}
 
-	userID := r.Context().Value("user_id").(int)
+	CustomerID := r.Context().Value("customer_id").(int)
 
-	response, err := s.Store.GetAccountByID(id, userID)
+	response, err := s.Store.GetAccountByID(id, CustomerID)
 
 	if err != nil {
 		return ErrUnauthorizedAccess()
@@ -104,13 +103,13 @@ func (s *APIServer) HandleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 		return ErrInvalidRequest()
 	}
 
-	if request.FirstName == "" || request.Currency == "" {
+	if request.FirstName == "" {
 		return ErrInvalidRequest()
 	}
 
-	userID := r.Context().Value("user_id").(int)
+	CustomerID := r.Context().Value("customer_id").(int)
 
-	response, err := s.Store.UpdateAccount(id, userID, request)
+	response, err := s.Store.UpdateAccount(id, CustomerID, request)
 
 	if err != nil {
 		return ErrInternalServer()
@@ -129,9 +128,9 @@ func (s *APIServer) HandleRemoveAccount(w http.ResponseWriter, r *http.Request) 
 		return ErrInvalidRequest()
 	}
 
-	userID := r.Context().Value("user_id").(int)
+	CustomerID := r.Context().Value("customer_id").(int)
 
-	response, err := s.Store.RemoveAccount(id, userID)
+	response, err := s.Store.RemoveAccount(id, CustomerID)
 
 	if err != nil {
 		return ErrUnauthorizedAccess()

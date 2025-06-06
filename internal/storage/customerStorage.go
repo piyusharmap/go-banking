@@ -6,18 +6,18 @@ import (
 	"github.com/piyusharmap/go-banking/internal/types"
 )
 
-func (s *PostgresStore) RegisterUser(user *types.User) (*types.UserResponse, error) {
-	query := `INSERT INTO users (contact, email, password_hash, created_at, updated_at)
+func (s *PostgresStore) RegisterCustomer(customer *types.Customer) (*types.CustomerResponse, error) {
+	query := `INSERT INTO customer (contact, email, password_hash, created_at, updated_at)
 	VALUES ($1, $2, $3, $4, $5)
 	RETURNING id, contact, email`
 
-	response := &types.UserResponse{}
+	response := &types.CustomerResponse{}
 
 	err := s.db.QueryRow(
 		query,
-		user.Contact,
-		user.Email,
-		user.Password,
+		customer.Contact,
+		customer.Email,
+		customer.Password,
 		time.Now().UTC(),
 		time.Now().UTC(),
 	).Scan(
@@ -33,37 +33,37 @@ func (s *PostgresStore) RegisterUser(user *types.User) (*types.UserResponse, err
 	return response, nil
 }
 
-func (s *PostgresStore) GetUser(user *types.User) (*types.UserModel, error) {
+func (s *PostgresStore) GetCustomer(customer *types.Customer) (*types.CustomerModel, error) {
 	query := `SELECT id, contact, email, password_hash
-	FROM users
+	From customer
 	WHERE contact=$1 AND email=$2`
 
-	storedUser := &types.UserModel{}
+	storedCustomer := &types.CustomerModel{}
 
 	err := s.db.QueryRow(
 		query,
-		user.Contact,
-		user.Email,
+		customer.Contact,
+		customer.Email,
 	).Scan(
-		&storedUser.ID,
-		&storedUser.Contact,
-		&storedUser.Email,
-		&storedUser.Password,
+		&storedCustomer.ID,
+		&storedCustomer.Contact,
+		&storedCustomer.Email,
+		&storedCustomer.Password,
 	)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return storedUser, nil
+	return storedCustomer, nil
 }
 
-func (s *PostgresStore) GetUserByID(id int) (*types.UserResponse, error) {
+func (s *PostgresStore) GetCustomerByID(id int) (*types.CustomerResponse, error) {
 	query := `SELECT id, contact, email
-	FROM users
+	From customer
 	WHERE id=$1`
 
-	response := &types.UserResponse{}
+	response := &types.CustomerResponse{}
 
 	err := s.db.QueryRow(
 		query,
@@ -81,18 +81,18 @@ func (s *PostgresStore) GetUserByID(id int) (*types.UserResponse, error) {
 	return response, nil
 }
 
-func (s *PostgresStore) UpdateUser(id int, user *types.UpdateUserRequest) (*types.UserResponse, error) {
-	query := `UPDATE users
+func (s *PostgresStore) UpdateCustomer(id int, customer *types.UpdateCustomerRequest) (*types.CustomerResponse, error) {
+	query := `UPDATE customer
 	SET contact=$1, email=$2, updated_at=$3
 	WHERE id=$4
 	RETURNING id, contact, email`
 
-	response := &types.UserResponse{}
+	response := &types.CustomerResponse{}
 
 	err := s.db.QueryRow(
 		query,
-		user.Contact,
-		user.Email,
+		customer.Contact,
+		customer.Email,
 		time.Now().UTC(),
 		id,
 	).Scan(
@@ -108,12 +108,12 @@ func (s *PostgresStore) UpdateUser(id int, user *types.UpdateUserRequest) (*type
 	return response, nil
 }
 
-func (s *PostgresStore) DeleteUser(id int) (*types.UserResponse, error) {
-	query := `DELETE FROM users
+func (s *PostgresStore) DeleteCustomer(id int) (*types.CustomerResponse, error) {
+	query := `DELETE From customer
 	WHERE id=$1
 	RETURNING id, contact, email`
 
-	response := &types.UserResponse{}
+	response := &types.CustomerResponse{}
 
 	err := s.db.QueryRow(
 		query,

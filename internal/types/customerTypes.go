@@ -2,18 +2,18 @@ package types
 
 import "time"
 
-type User struct {
+type Customer struct {
 	Contact  string `json:"contact"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-type UpdateUserRequest struct {
+type UpdateCustomerRequest struct {
 	Contact string `json:"contact"`
 	Email   string `json:"email"`
 }
 
-type UserModel struct {
+type CustomerModel struct {
 	ID        int
 	Contact   string
 	Email     string
@@ -22,7 +22,7 @@ type UserModel struct {
 	updatedAt time.Time
 }
 
-type UserResponse struct {
+type CustomerResponse struct {
 	ID      int    `json:"id"`
 	Contact string `json:"contact"`
 	Email   string `json:"email"`
