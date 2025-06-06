@@ -27,15 +27,7 @@ type PostgresStore struct {
 }
 
 func (s *PostgresStore) Init() error {
-	if err := CreateUserTable(s.db); err != nil {
-		return err
-	}
-
-	if err := CreateAccountTable(s.db); err != nil {
-		return err
-	}
-
-	return nil
+	return s.db.Ping()
 }
 
 func NewPostgresStore() (*PostgresStore, error) {
