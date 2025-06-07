@@ -37,6 +37,9 @@ func (s *APIServer) Run() {
 	router.HandleFunc("/account", withJWTAuth(makeHTTPHandleFunc(s.HandleAccount), s))
 	router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.HandleAccountByID), s))
 
+	// transfer routes
+	router.HandleFunc("/transfer", withJWTAuth(makeHTTPHandleFunc(s.HandleTransfer), s))
+
 	log.Println("server is running on port:", s.ListenAddr)
 
 	http.ListenAndServe(s.ListenAddr, router)

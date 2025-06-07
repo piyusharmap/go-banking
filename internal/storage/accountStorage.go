@@ -8,7 +8,7 @@ import (
 )
 
 func (s *PostgresStore) GetCustomerAccounts(customerID int) ([]*types.AccountResponse, error) {
-	query := `SELECT id, customer_id, first_name, last_name, account_nummber
+	query := `SELECT id, customer_id, first_name, last_name, account_number
 	FROM account
 	WHERE customer_id=$1`
 
