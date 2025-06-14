@@ -35,7 +35,7 @@ func (s *APIServer) Run() {
 
 	// account routes
 	router.HandleFunc("/account", withJWTAuth(makeHTTPHandleFunc(s.HandleAccount), s))
-	router.HandleFunc("/account/balance", withJWTAuth(makeHTTPHandleFunc(s.HandleFetchAccountBalance), s))
+	router.HandleFunc("/account/balance", withJWTAuth(makeHTTPHandleFunc(s.HandleAccountBalance), s))
 	router.HandleFunc("/account/{id}", withJWTAuth(makeHTTPHandleFunc(s.HandleAccountByID), s))
 
 	// transfer routes

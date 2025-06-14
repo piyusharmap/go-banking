@@ -20,7 +20,8 @@ type Storage interface {
 	RegisterAccount(*types.Account) (*types.AccountResponse, error)
 	GetAccountByID(int, int) (*types.AccountResponse, error)
 	UpdateAccount(int, int, *types.UpdateAccountRequest) (*types.AccountResponse, error)
-	FetchBalance(int, string) (*types.BalanceQueryResponse, error)
+	AddBalance(int, string, int64) (*types.AccountBalanceResponse, error)
+	FetchBalance(int, string) (*types.AccountBalanceResponse, error)
 	RemoveAccount(int, int) (*types.AccountResponse, error)
 }
 

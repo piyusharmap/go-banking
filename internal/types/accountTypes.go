@@ -18,6 +18,12 @@ type FetchBalanceRequest struct {
 	AccountNumber string `json:"account_number"`
 }
 
+type AddBalanceRequest struct {
+	ID            int    `json:"id"`
+	AccountNumber string `json:"account_number"`
+	Balance       int64  `json:"balance"`
+}
+
 type AccountModel struct {
 	ID            int
 	CustomerID    int
@@ -34,7 +40,7 @@ type AccountResponse struct {
 	AccountNumber string `json:"account_number"`
 }
 
-type BalanceQueryResponse struct {
+type AccountBalanceResponse struct {
 	ID            int    `json:"id"`
 	AccountNumber string `json:"account_number"`
 	Balance       string `json:"balance"`

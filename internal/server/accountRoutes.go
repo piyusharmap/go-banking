@@ -159,13 +159,39 @@ func (s *APIServer) HandleRemoveAccount(w http.ResponseWriter, r *http.Request) 
 	})
 }
 
-func (s *APIServer) HandleFetchAccountBalance(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) HandleAccountBalance(w http.ResponseWriter, r *http.Request) error {
 	requestMethod := r.Method
 
-	if requestMethod != "POST" {
-		return ErrInvalidMethod()
+	switch requestMethod {
+	case "POST":
+		return s.HandleFetchBalance(w, r)
+	case "PUT":
+		return s.HandleAddBalance(w, r)
 	}
 
+	return ErrInvalidMethod()
+}
+
+func (s *APIServer) HandleAddBalance(w http.ResponseWriter, r *http.Request) error {
+	request := &types.AddBalanceRequest{}
+
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
+		return ErrInvalidRequest()
+	}
+
+	response, err := s.Store.AddBalance(request.ID, request.AccountNumber, request.Balance)
+
+	if err != nil {
+		return ErrInternalServer()
+	}
+
+	return WriteJSON(w, http.StatusOK, map[string]any{
+		"account_balance": response,
+		"message":         "amount added to account",
+	})
+}
+
+func (s *APIServer) HandleFetchBalance(w http.ResponseWriter, r *http.Request) error {
 	request := &types.FetchBalanceRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {

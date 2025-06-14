@@ -128,12 +128,38 @@ func (s *PostgresStore) UpdateAccount(id, CustomerID int, account *types.UpdateA
 	return response, nil
 }
 
-func (s *PostgresStore) FetchBalance(id int, accNumber string) (*types.BalanceQueryResponse, error) {
-	query := `SELECT id, account_number, balance
+func (s *PostgresStore) AddBalance(id int, accNumber string, balance int64) (*types.AccountBalanceResponse, error) {
+	query := `UPDATE account
+	SET balance=balance + $1
+	WHERE id=$2 AND account_number=$3
+	RETURNING id, account_number, balance`
+
+	response := &types.AccountBalanceResponse{}
+
+	err := s.db.QueryRow(
+		query,
+		balance,
+		id,
+		accNumber,
+	).Scan(
+		&response.ID,
+		&response.AccountNumber,
+		&response.Balance,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
+func (s *PostgresStore) FetchBalance(id int, accNumber string) (*types.AccountBalanceResponse, error) {
+	query := `SELECT id, account_number, TO_CHAR(balance / 100.0, 'FM9999999999.00') 
 	FROM account
 	WHERE id=$1 AND account_number=$2`
 
-	response := &types.BalanceQueryResponse{}
+	response := &types.AccountBalanceResponse{}
 
 	err := s.db.QueryRow(
 		query,
