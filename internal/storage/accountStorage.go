@@ -128,6 +128,30 @@ func (s *PostgresStore) UpdateAccount(id, CustomerID int, account *types.UpdateA
 	return response, nil
 }
 
+func (s *PostgresStore) FetchBalance(id int, accNumber string) (*types.BalanceQueryResponse, error) {
+	query := `SELECT id, account_number, balance
+	FROM account
+	WHERE id=$1 AND account_number=$2`
+
+	response := &types.BalanceQueryResponse{}
+
+	err := s.db.QueryRow(
+		query,
+		id,
+		accNumber,
+	).Scan(
+		&response.ID,
+		&response.AccountNumber,
+		&response.Balance,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return response, nil
+}
+
 func (s *PostgresStore) RemoveAccount(id, CustomerID int) (*types.AccountResponse, error) {
 	query := `DELETE FROM account
 	WHERE id=$1 AND customer_id=$2

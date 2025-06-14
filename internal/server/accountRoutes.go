@@ -158,3 +158,27 @@ func (s *APIServer) HandleRemoveAccount(w http.ResponseWriter, r *http.Request) 
 		"message": "account removed",
 	})
 }
+
+func (s *APIServer) HandleFetchAccountBalance(w http.ResponseWriter, r *http.Request) error {
+	requestMethod := r.Method
+
+	if requestMethod != "POST" {
+		return ErrInvalidMethod()
+	}
+
+	request := &types.FetchBalanceRequest{}
+
+	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
+		return ErrInvalidRequest()
+	}
+
+	response, err := s.Store.FetchBalance(request.ID, request.AccountNumber)
+
+	if err != nil {
+		return ErrInternalServer()
+	}
+
+	return WriteJSON(w, http.StatusOK, map[string]any{
+		"balance_info": response,
+	})
+}
