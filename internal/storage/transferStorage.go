@@ -6,7 +6,7 @@ import (
 	"github.com/piyusharmap/go-banking/internal/types"
 )
 
-// first we will intiate a transfer
+// first intiate a transfer
 // fetch sender account and lock the account
 // fetch receiver account
 // deduct amount from sender account and credit in receiver account
@@ -115,4 +115,55 @@ func (s *PostgresStore) RegisterTransfer(amountTransfer *types.AmountTransfer) (
 	response.ReceiverAccNumber = receiverAccNumber
 
 	return response, nil
+}
+
+func (s *PostgresStore) GetAllTransfer(accountID int) ([]*types.AmountTransferResponse, error) {
+	query := `SELECT 
+		at.id,
+		at.sender_account_id,
+		sender.account_number AS sender_account_number,
+		at.receiver_account_id,
+		receiver.account_number AS receiver_account_number,
+		at.amount,
+		at.stage,
+		at.remark,
+		at.created_at
+	FROM amount_transfer at
+	JOIN account sender ON at.sender_account_id=sender.id
+	JOIN account receiver ON at.receiver_account_id=receiver.id
+	WHERE sender.id=$1 OR receiver.id=$1
+	ORDER BY at.created_at DESC`
+
+	rows, err := s.db.Query(query, accountID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var responseTransfers []*types.AmountTransferResponse
+
+	for rows.Next() {
+		var transfer types.AmountTransferResponse
+
+		err := rows.Scan(
+			&transfer.ID,
+			&transfer.SenderAccID,
+			&transfer.SenderAccNumber,
+			&transfer.ReceiverAccID,
+			&transfer.ReceiverAccNumber,
+			&transfer.Amount,
+			&transfer.Stage,
+			&transfer.Remark,
+			&transfer.CreatedAt,
+		)
+
+		if err != nil {
+			return nil, err
+		}
+
+		responseTransfers = append(responseTransfers, &transfer)
+	}
+
+	return responseTransfers, nil
 }

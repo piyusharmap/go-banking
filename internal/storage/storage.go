@@ -27,6 +27,7 @@ type Storage interface {
 
 	// transfer methods
 	RegisterTransfer(*types.AmountTransfer) (*types.AmountTransferResponse, error)
+	GetAllTransfer(int) ([]*types.AmountTransferResponse, error)
 }
 
 type PostgresStore struct {

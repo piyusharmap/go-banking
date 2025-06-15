@@ -40,6 +40,7 @@ func (s *APIServer) Run() {
 
 	// transfer routes
 	router.HandleFunc("/transfer", withJWTAuth(makeHTTPHandleFunc(s.HandleCreateTransfer), s))
+	router.HandleFunc("/transfer/{id}", withJWTAuth(makeHTTPHandleFunc(s.HandleTransferHistoryByAccount), s))
 
 	log.Println("server is running on port:", s.ListenAddr)
 

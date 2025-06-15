@@ -2,29 +2,30 @@ package server
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/piyusharmap/go-banking/internal/types"
+	"github.com/piyusharmap/go-banking/internal/utility"
 )
 
-func (s *APIServer) HandleTransfer(w http.ResponseWriter, r *http.Request) error {
+func (s *APIServer) HandleCreateTransfer(w http.ResponseWriter, r *http.Request) error {
 	requestMethod := r.Method
 
-	switch requestMethod {
-	case "POST":
-		return s.HandleCreateAccount(w, r)
+	if requestMethod != "POST" {
+		return ErrInvalidMethod()
 	}
 
-	return ErrInvalidRequest()
-}
-
-func (s *APIServer) HandleCreateTransfer(w http.ResponseWriter, r *http.Request) error {
 	request := &types.AmountTransferRequest{}
 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
 	}
 	defer r.Body.Close()
+
+	if request.SenderAccID == request.ReceiverAccID {
+		return ErrInvalidRequest()
+	}
 
 	customerID := r.Context().Value("customer_id").(int)
 
@@ -57,5 +58,37 @@ func (s *APIServer) HandleCreateTransfer(w http.ResponseWriter, r *http.Request)
 	return WriteJSON(w, http.StatusOK, map[string]any{
 		"message":  "transfer status",
 		"transfer": response,
+	})
+}
+
+func (s *APIServer) HandleTransferHistoryByAccount(w http.ResponseWriter, r *http.Request) error {
+	requestMethod := r.Method
+
+	if requestMethod != "GET" {
+		return ErrInvalidMethod()
+	}
+
+	accountID, err := utility.GetRequestID(r)
+
+	if err != nil {
+		return ErrUnauthenticatedAccess()
+	}
+
+	customerID := r.Context().Value("customer_id").(int)
+
+	if _, err := s.Store.GetAccountByID(accountID, customerID); err != nil {
+		return ErrUnauthorizedAccess()
+	}
+
+	transfersResponse, err := s.Store.GetAllTransfer(accountID)
+
+	if err != nil {
+		log.Print(err)
+		return ErrInternalServer()
+	}
+
+	return WriteJSON(w, http.StatusOK, map[string]any{
+		"message":   "user transfers",
+		"transfers": transfersResponse,
 	})
 }
