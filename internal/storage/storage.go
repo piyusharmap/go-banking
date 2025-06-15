@@ -20,9 +20,13 @@ type Storage interface {
 	RegisterAccount(*types.Account) (*types.AccountResponse, error)
 	GetAccountByID(int, int) (*types.AccountResponse, error)
 	UpdateAccount(int, int, *types.UpdateAccountRequest) (*types.AccountResponse, error)
-	AddBalance(int, string, int64) (*types.AccountBalanceResponse, error)
-	FetchBalance(int, string) (*types.AccountBalanceResponse, error)
+	AddBalance(int, int, int64) (*types.AccountBalanceResponse, error)
+	FetchBalanceInfo(int, int) (*types.AccountBalanceResponse, error)
+	FetchRawBalance(int, int) (int64, error)
 	RemoveAccount(int, int) (*types.AccountResponse, error)
+
+	// transfer methods
+	RegisterTransfer(*types.AmountTransfer) (*types.AmountTransferResponse, error)
 }
 
 type PostgresStore struct {

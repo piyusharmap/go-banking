@@ -15,15 +15,14 @@ type AmountTransfer struct {
 	ReceiverAccID int           `json:"receiver_account_id"`
 	Amount        int64         `json:"amount"`
 	Stage         TransferStage `json:"transfer_stage"`
-	Remark        string        `json:"remark"`
+	Remark        string        `json:"remark,omitempty"`
 }
 
-type AmountTranserRequest struct {
-	ID                int    `json:"id"`
-	SenderAccNumber   string `json:"sender_account_number"`
-	ReceiverAccNumber string `json:"receiver_account_number"`
-	Amount            int64  `json:"amount"`
-	Remark            string `json:"remark"`
+type AmountTransferRequest struct {
+	SenderAccID   int    `json:"sender_account_id"`
+	ReceiverAccID int    `json:"receiver_account_id"`
+	Amount        int64  `json:"amount"`
+	Remark        string `json:"remark,omitempty"`
 }
 
 type AmountTransferModel struct {
@@ -39,10 +38,12 @@ type AmountTransferModel struct {
 
 type AmountTransferResponse struct {
 	ID                int           `json:"id"`
+	SenderAccID       int           `json:"sender_account_id"`
 	SenderAccNumber   string        `json:"sender_account_number"`
+	ReceiverAccID     int           `json:"receiver_account_id"`
 	ReceiverAccNumber string        `json:"receiver_account_number"`
 	Amount            int64         `json:"amount"`
 	Stage             TransferStage `json:"transfer_stage"`
-	Remark            string        `json:"remark"`
+	Remark            string        `json:"remark,omitempty"`
 	CreatedAt         time.Time     `json:"created_at"`
 }

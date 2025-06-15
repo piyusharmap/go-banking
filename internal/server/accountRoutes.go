@@ -119,6 +119,7 @@ func (s *APIServer) HandleUpdateAccount(w http.ResponseWriter, r *http.Request) 
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
 	}
+	defer r.Body.Close()
 
 	if request.FirstName == "" {
 		return ErrInvalidRequest()
@@ -178,8 +179,11 @@ func (s *APIServer) HandleAddBalance(w http.ResponseWriter, r *http.Request) err
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
 	}
+	defer r.Body.Close()
 
-	response, err := s.Store.AddBalance(request.ID, request.AccountNumber, request.Balance)
+	customerID := r.Context().Value("customer_id").(int)
+
+	response, err := s.Store.AddBalance(request.ID, customerID, request.Balance)
 
 	if err != nil {
 		return ErrInternalServer()
@@ -197,8 +201,11 @@ func (s *APIServer) HandleFetchBalance(w http.ResponseWriter, r *http.Request) e
 	if err := json.NewDecoder(r.Body).Decode(request); err != nil {
 		return ErrInvalidRequest()
 	}
+	defer r.Body.Close()
 
-	response, err := s.Store.FetchBalance(request.ID, request.AccountNumber)
+	customerID := r.Context().Value("customer_id").(int)
+
+	response, err := s.Store.FetchBalanceInfo(request.ID, customerID)
 
 	if err != nil {
 		return ErrInternalServer()

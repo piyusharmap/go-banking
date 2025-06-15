@@ -128,10 +128,10 @@ func (s *PostgresStore) UpdateAccount(id, CustomerID int, account *types.UpdateA
 	return response, nil
 }
 
-func (s *PostgresStore) AddBalance(id int, accNumber string, balance int64) (*types.AccountBalanceResponse, error) {
+func (s *PostgresStore) AddBalance(id, customerID int, balance int64) (*types.AccountBalanceResponse, error) {
 	query := `UPDATE account
 	SET balance=balance + $1
-	WHERE id=$2 AND account_number=$3
+	WHERE id=$2 AND customer_id=$3
 	RETURNING id, account_number, balance`
 
 	response := &types.AccountBalanceResponse{}
@@ -140,7 +140,7 @@ func (s *PostgresStore) AddBalance(id int, accNumber string, balance int64) (*ty
 		query,
 		balance,
 		id,
-		accNumber,
+		customerID,
 	).Scan(
 		&response.ID,
 		&response.AccountNumber,
@@ -154,17 +154,17 @@ func (s *PostgresStore) AddBalance(id int, accNumber string, balance int64) (*ty
 	return response, nil
 }
 
-func (s *PostgresStore) FetchBalance(id int, accNumber string) (*types.AccountBalanceResponse, error) {
-	query := `SELECT id, account_number, TO_CHAR(balance / 100.0, 'FM9999999999.00') 
+func (s *PostgresStore) FetchBalanceInfo(id, customerID int) (*types.AccountBalanceResponse, error) {
+	query := `SELECT id, account_number, TO_CHAR(balance / 100.0, 'FM9999999990.00') 
 	FROM account
-	WHERE id=$1 AND account_number=$2`
+	WHERE id=$1 AND customer_id=$2`
 
 	response := &types.AccountBalanceResponse{}
 
 	err := s.db.QueryRow(
 		query,
 		id,
-		accNumber,
+		customerID,
 	).Scan(
 		&response.ID,
 		&response.AccountNumber,
@@ -176,6 +176,26 @@ func (s *PostgresStore) FetchBalance(id int, accNumber string) (*types.AccountBa
 	}
 
 	return response, nil
+}
+
+func (s *PostgresStore) FetchRawBalance(id, customerID int) (int64, error) {
+	query := `SELECT balance
+	FROM account
+	WHERE id=$1 AND customer_id=$2`
+
+	var balance int64
+
+	err := s.db.QueryRow(
+		query,
+		id,
+		customerID,
+	).Scan(&balance)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return balance, nil
 }
 
 func (s *PostgresStore) RemoveAccount(id, CustomerID int) (*types.AccountResponse, error) {
