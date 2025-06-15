@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"log"
 	"net/http"
 
 	"github.com/piyusharmap/go-banking/internal/types"
@@ -83,7 +82,6 @@ func (s *APIServer) HandleTransferHistoryByAccount(w http.ResponseWriter, r *htt
 	transfersResponse, err := s.Store.GetAllTransfer(accountID)
 
 	if err != nil {
-		log.Print(err)
 		return ErrInternalServer()
 	}
 
